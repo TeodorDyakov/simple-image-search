@@ -15,6 +15,11 @@ import javax.swing.JPanel;
 
 public class GUI extends JPanel {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	public GUI() {
 		JLabel labelQ = new JLabel("query image");
 		add(labelQ);
@@ -22,7 +27,7 @@ public class GUI extends JPanel {
 		for (BufferedImage bi : bil) {
 			add(new JLabel("" + count++));
 			ImageIcon imageIcon = new ImageIcon(
-					bi.getScaledInstance(bi.getWidth()/2, bi.getHeight()/2, Image.SCALE_DEFAULT));
+					bi.getScaledInstance(bi.getWidth() / 2, bi.getHeight() / 2, Image.SCALE_DEFAULT));
 			JLabel label = new JLabel(imageIcon);
 			add(label);
 		}
@@ -49,9 +54,9 @@ public class GUI extends JPanel {
 		 * index.
 		 */
 		Index.useColor = true;
-		Index.binsPerColor = 5;
+		Index.binsPerColor = 6;
 		Index.useLBP = true;
-		 loadIndexFromFile = true;
+		// loadIndexFromFile = true;
 
 		if (loadIndexFromFile) {
 			Index.loadIndexFromFile(Index.defaultIndexFile);
@@ -59,7 +64,7 @@ public class GUI extends JPanel {
 			Index.buildIndex(Index.imagesFolderPath);
 		}
 
-		BufferedImage img = ImageIO.read(new File(Index.imagesFolderPath + "\\777.jpg"));
+		BufferedImage img = ImageIO.read(new File(Index.imagesFolderPath + "\\301.jpg"));
 		List<File> im = Index.getTopKMatches(img, 10);
 
 		bil.add(img);

@@ -29,7 +29,7 @@ public class MathUtils {
 	}
 
 	public static double L1(double[] vectorA, double[] vectorB) {
-		float res = 0;
+		double res = 0;
 		for (int i = 0; i < vectorA.length; i++) {
 			double diff = vectorA[i] - vectorB[i];
 			res += Math.abs(diff);

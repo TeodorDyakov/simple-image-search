@@ -14,6 +14,34 @@ public class ImageDescriptors {
 		}
 	}
 
+	static int[] lbp(BufferedImage image) {
+		final int[][] img = ImageDescriptors.imagetoGreycale2dArray(image);
+		final int[] histogram = new int[257];
+
+		final int[] dx = { 0, 0, -1, -1, -1, 1, 1, 1 };
+		final int[] dy = { 1, -1, 0, 1, -1, 0, 1, -1 };
+
+		for (int i = 1; i < img.length - 1; i++) {
+			for (int j = 1; j < img[0].length - 1; j++) {
+				int pow = 1;
+				int sum = 0;
+				final int center = img[i][j];
+				for (int k = 0; k < dx.length; k++) {
+					if (center >= img[i + dx[k]][j + dy[k]]) {
+						sum += pow;
+					}
+					pow *= 2;
+				}
+				if (isUniform[sum]) {
+					histogram[sum]++;
+				} else {
+					histogram[256]++;
+				}
+			}
+		}
+		return histogram;
+	}
+
 	static int[] colorHistogram(BufferedImage img, int binsPerColor) {
 		final int[][][] histogram = new int[binsPerColor][binsPerColor][binsPerColor];
 		final int div = (int) Math.ceil(256d / binsPerColor);
@@ -35,37 +63,6 @@ public class ImageDescriptors {
 			return lbp(img);
 		}
 		return colorHistogram(img, binsPerColor);
-	}
-
-	static int[] lbp(BufferedImage image) {
-		int[][] img = ImageDescriptors.imagetoGreycale2dArray(image);
-		int sz = 1;
-		int width = img.length;
-		int height = img[0].length;
-		int[] histogram = new int[257];
-		for (int i = sz; i < width - sz; i++) {
-			for (int j = sz; j < height - sz; j++) {
-				int pow = 1;
-				int sum = 0;
-				int center = img[i][j];
-				for (int ii = -sz; ii <= sz; ii++) {
-					for (int jj = -sz; jj <= sz; jj++) {
-						if (ii != 0 || jj != 0) {
-							if (center >= img[i + ii][j + jj]) {
-								sum += pow;
-							}
-							pow *= 2;
-						}
-					}
-				}
-				if (isUniform[sum]) {
-					histogram[sum]++;
-				} else {
-					histogram[256]++;
-				}
-			}
-		}
-		return histogram;
 	}
 
 	static int[][] imagetoGreycale2dArray(BufferedImage img) {

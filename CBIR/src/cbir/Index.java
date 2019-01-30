@@ -14,7 +14,7 @@ import javax.imageio.ImageIO;
 
 public class Index {
 
-	static int binsPerColor = 8;
+	static int binsPerColor = 6;
 	static List<IndexedImage> index;
 
 	static boolean useLBP = false;
@@ -89,7 +89,7 @@ public class Index {
 		return results;
 	}
 
-//	static String imagesFolderPath = "image.vary.jpg/image.vary.jpg";
+	// static String imagesFolderPath = "image.vary.jpg/image.vary.jpg";
 	static String imagesFolderPath = "image.orig";
 	static File defaultIndexFile = new File("index/index.txt");
 
