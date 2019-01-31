@@ -56,7 +56,10 @@ public class GUI extends JPanel {
 		Index.useColor = true;
 		Index.binsPerColor = 6;
 		Index.useLBP = true;
-		// loadIndexFromFile = true;
+//		loadIndexFromFile = true;
+		boolean checkPrecision = false;
+//		checkPrecision = true;
+		int numberOfResults = 10;
 
 		if (loadIndexFromFile) {
 			Index.loadIndexFromFile(Index.defaultIndexFile);
@@ -64,28 +67,30 @@ public class GUI extends JPanel {
 			Index.buildIndex(Index.imagesFolderPath);
 		}
 
-		BufferedImage img = ImageIO.read(new File(Index.imagesFolderPath + "\\301.jpg"));
-		List<File> im = Index.getTopKMatches(img, 10);
+		BufferedImage img = ImageIO.read(new File(Index.imagesFolderPath + "\\214.jpg"));
+		List<File> im = Index.getTopKMatches(img, numberOfResults);
 
 		bil.add(img);
 		for (File f : im) {
 			BufferedImage bi = ImageIO.read(f);
 			bil.add(bi);
 		}
-		// int corr = 0;
-		// for (File f : new File(Index.imagesFolderPath).listFiles()) {
-		//
-		// for (File f1 : Index.getTopKMatches(ImageIO.read(f), 2).subList(1,
-		// 2)) {
-		// int l = Integer.valueOf(f.getName().replaceAll("\\.jpg", ""));
-		// int l1 = Integer.valueOf(f1.getName().replaceAll("\\.jpg", ""));
-		// if (l / 100 == l1 / 100) {
-		// corr++;
-		// }
-		// }
-		// }
-		// System.out.println((double) corr / 1000);
+		long tic = System.currentTimeMillis();
+		if (checkPrecision) {
+			int corr = 0;
+			for (File f : new File(Index.imagesFolderPath).listFiles()) {
 
+				for (File f1 : Index.getTopKMatches(ImageIO.read(f), 2).subList(1, 2)) {
+					int l = Integer.valueOf(f.getName().replaceAll("\\.jpg", ""));
+					int l1 = Integer.valueOf(f1.getName().replaceAll("\\.jpg", ""));
+					if (l / 100 == l1 / 100) {
+						corr++;
+					}
+				}
+			}
+			System.out.println((double) corr / 1000);
+		}
+		System.out.println(System.currentTimeMillis() - tic);
 		JPanel jp = new GUI();
 		JFrame frame = new JFrame();
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

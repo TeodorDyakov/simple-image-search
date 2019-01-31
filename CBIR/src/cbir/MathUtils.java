@@ -4,52 +4,25 @@ import java.util.Arrays;
 
 public class MathUtils {
 
-	public static int[] flatten(int[][][] threeDHistogram) {
-		int dim = threeDHistogram.length;
-		int size = dim * dim * dim;
-		int[] histogram = new int[size];
-		int idx = 0;
-		for (int i = 0; i < dim; i++) {
-			for (int j = 0; j < dim; j++) {
-				for (int k = 0; k < dim; k++) {
-					histogram[idx++] = threeDHistogram[i][j][k];
-				}
-			}
-		}
-		return histogram;
-	}
-
-	static double[] normalize(int[] a) {
-		int sum = Arrays.stream(a).sum();
-		double[] res = new double[a.length];
+	static float[] normalize(int[] a) {
+		final int sum = Arrays.stream(a).sum();
+		final float[] res = new float[a.length];
 		for (int i = 0; i < res.length; i++) {
-			res[i] = (double) a[i] / sum;
+			res[i] = (float) a[i] / sum;
 		}
 		return res;
 	}
 
-	public static double L1(double[] vectorA, double[] vectorB) {
-		double res = 0;
+	static float L1distance(float[] vectorA, float[] vectorB) {
+		float res = 0;
 		for (int i = 0; i < vectorA.length; i++) {
-			double diff = vectorA[i] - vectorB[i];
+			final float diff = vectorA[i] - vectorB[i];
 			res += Math.abs(diff);
 		}
 		return res;
 	}
 
-	public static double distance(int[] vectorA, int[] vectorB) {
-		return 1 / L1(normalize(vectorA), normalize(vectorB));
-	}
-
-	public static int[] concat(int[] vecA, int[] vecB) {
-		int[] vecC = new int[vecA.length + vecB.length];
-		int idx = 0;
-		for (int i = 0; i < vecA.length; i++) {
-			vecC[idx++] = vecA[i];
-		}
-		for (int i = 0; i < vecB.length; i++) {
-			vecC[idx++] = vecB[i];
-		}
-		return vecC;
+	static float similiraty(float[] vectorA, float[] vectorB) {
+		return 1 / L1distance(vectorA, vectorB);
 	}
 }

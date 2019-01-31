@@ -14,7 +14,7 @@ import javax.imageio.ImageIO;
 
 public class Index {
 
-	static int binsPerColor = 6;
+	static int binsPerColor = 8;
 	static List<IndexedImage> index;
 
 	static boolean useLBP = false;
@@ -66,17 +66,17 @@ public class Index {
 	static List<File> getTopKMatches(BufferedImage queryImg, int k) {
 		long tic = System.currentTimeMillis();
 
-		int[] queryHistogram = ImageDescriptors.computeImageDescriptor(queryImg, binsPerColor, useLBP,
-				useColor);
+		float[] imageQueryDescriptor = ImageDescriptors.computeImageDescriptor(queryImg, binsPerColor,
+				useLBP, useColor);
 
 		List<File> results = new ArrayList<>();
 		for (int i = 0; i < k; i++) {
 
-			double maxSimilarity = Double.NEGATIVE_INFINITY;
+			float maxSimilarity = Float.NEGATIVE_INFINITY;
 			File argmin = null;
 
 			for (IndexedImage img : index) {
-				double similarity = MathUtils.distance(queryHistogram, img.imageDescriptor);
+				float similarity = MathUtils.similiraty(imageQueryDescriptor, img.imageDescriptor);
 				if (!results.contains(img.file) && maxSimilarity < similarity) {
 					maxSimilarity = similarity;
 					argmin = img.file;
