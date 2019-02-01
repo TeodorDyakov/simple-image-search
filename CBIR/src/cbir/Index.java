@@ -7,37 +7,50 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.imageio.ImageIO;
 
-public class Index {
+public class Index implements Serializable {
 
-	static int binsPerColor = 8;
-	static List<IndexedImage> index;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
-	static boolean useLBP = false;
-	static boolean useColor = false;
+	List<IndexedImage> index;
 
-	static void saveIndexToFile(File file) throws IOException {
+	boolean useLBP = false;
+	boolean useColor = false;
+
+	int binsPerColor = 8;
+
+	Index(int binsPerColor, boolean useLBP, boolean useColor) {
+		this.useColor = useColor;
+		this.binsPerColor = binsPerColor;
+		this.useLBP = useLBP;
+	}
+
+	void saveToFile(File file) throws IOException {
 		FileOutputStream fos = new FileOutputStream(file);
 		ObjectOutputStream out = new ObjectOutputStream(fos);
-		out.writeObject(index);
+		out.writeObject(this);
 		out.close();
 		fos.close();
 	}
 
-	@SuppressWarnings("unchecked")
-	static void loadIndexFromFile(File file) throws IOException, ClassNotFoundException {
+	static Index loadIndexFromFile(File file) throws IOException, ClassNotFoundException {
 		FileInputStream fis = new FileInputStream(file);
 		ObjectInputStream in = new ObjectInputStream(fis);
-		index = (List<IndexedImage>) in.readObject();
+		Index index = (Index) in.readObject();
 		in.close();
 		fis.close();
+		return index;
 	}
 
-	static IndexedImage createIndexedImage(File file) throws IOException {
+	IndexedImage createIndexedImage(File file) throws IOException {
 		BufferedImage img = ImageIO.read(file);
 		IndexedImage indexedImage = new IndexedImage();
 		indexedImage.imageDescriptor = ImageDescriptors.computeImageDescriptor(img, binsPerColor, useLBP,
@@ -47,31 +60,34 @@ public class Index {
 		return indexedImage;
 	}
 
-	static List<IndexedImage> buildIndex(String pathToImageFolder)
-			throws IOException, ClassNotFoundException {
+	List<IndexedImage> buildIndex(String pathToImageFolder) throws IOException, ClassNotFoundException {
+
 		int count = 0;
 		long tic = System.currentTimeMillis();
 
-		File folder = new File(pathToImageFolder);
-		File[] listOfFiles = folder.listFiles();
+		File[] listOfFiles = new File(pathToImageFolder).listFiles();
 		List<IndexedImage> indexedImages = new ArrayList<>();
+
 		for (File f : listOfFiles) {
+
 			System.out.println(count++ + "/" + listOfFiles.length + " images indexed");
+
 			indexedImages.add(createIndexedImage(f));
 		}
 		System.out.println("index built in: " + (System.currentTimeMillis() - tic) / 1000f + "seconds");
+
 		return index = indexedImages;
 	}
 
-	static List<File> getTopKMatches(BufferedImage queryImg, int k) {
+	List<File> getTopKMatches(BufferedImage queryImg, int k) {
 		long tic = System.currentTimeMillis();
 
-		float[] imageQueryDescriptor = ImageDescriptors.computeImageDescriptor(queryImg, binsPerColor,
-				useLBP, useColor);
+		float[] imageQueryDescriptor = ImageDescriptors.computeImageDescriptor(queryImg, binsPerColor, useLBP,
+				useColor);
 
 		List<File> results = new ArrayList<>();
-		for (int i = 0; i < k; i++) {
 
+		for (int i = 0; i < k; i++) {
 			float maxSimilarity = Float.NEGATIVE_INFINITY;
 			File argmin = null;
 
@@ -82,15 +98,15 @@ public class Index {
 					argmin = img.file;
 				}
 			}
+
 			System.out.println(argmin.getName() + " similarity: " + String.format("%.3f", maxSimilarity));
+
 			results.add(argmin);
 		}
+
 		System.out.println("Search done in: " + (System.currentTimeMillis() - tic) / 1000f + "s");
+
 		return results;
 	}
-
-	// static String imagesFolderPath = "image.vary.jpg/image.vary.jpg";
-	static String imagesFolderPath = "image.orig";
-	static File defaultIndexFile = new File("index/index.txt");
 
 }
