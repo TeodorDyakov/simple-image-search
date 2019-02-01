@@ -24,7 +24,7 @@ public class GUI extends JPanel {
 		JLabel labelQ = new JLabel("query image");
 		add(labelQ);
 		int count = 0;
-		for (BufferedImage bi : bil) {
+		for (BufferedImage bi : results) {
 			add(new JLabel("" + count++));
 			ImageIcon imageIcon = new ImageIcon(
 					bi.getScaledInstance(bi.getWidth() / 2, bi.getHeight() / 2, Image.SCALE_DEFAULT));
@@ -33,7 +33,7 @@ public class GUI extends JPanel {
 		}
 	}
 
-	static List<BufferedImage> bil = new ArrayList<>();
+	static List<BufferedImage> results = new ArrayList<>();
 	static File defaultIndexFile = new File("index/index.txt");
 	static boolean loadIndexFromFile = false;
 	static String imagesFolderPath = "image.orig";
@@ -54,7 +54,11 @@ public class GUI extends JPanel {
 		 * a form to type path of image add button for saving and building
 		 * index.
 		 */
-		Index index = new Index(8, true, true);
+		boolean useTexture = true;
+		boolean useColor = true;
+		int binsPerColor = 8;
+
+		Index index = new Index(binsPerColor, useTexture, useColor);
 		// loadIndexFromFile = true;
 		boolean checkPrecision = false;
 		// checkPrecision = true;
@@ -67,26 +71,28 @@ public class GUI extends JPanel {
 		}
 
 		BufferedImage img = ImageIO.read(new File(imagesFolderPath + "\\214.jpg"));
-		List<File> im = index.getTopKMatches(img, numberOfResults);
+		List<File> topKMatches = index.getTopKMatches(img, numberOfResults);
 
-		bil.add(img);
-		for (File f : im) {
+		results.add(img);
+		for (File f : topKMatches) {
 			BufferedImage bi = ImageIO.read(f);
-			bil.add(bi);
+			results.add(bi);
 		}
-		if (checkPrecision) {
-			int corr = 0;
-			for (File f : new File(imagesFolderPath).listFiles()) {
 
-				for (File f1 : index.getTopKMatches(ImageIO.read(f), 2).subList(1, 2)) {
-					int l = Integer.valueOf(f.getName().replaceAll("\\.jpg", ""));
-					int l1 = Integer.valueOf(f1.getName().replaceAll("\\.jpg", ""));
-					if (l / 100 == l1 / 100) {
-						corr++;
+		if (checkPrecision) {
+			int correct = 0;
+			final int numberOfImagesInCategory = 100;
+			for (File queryImageFile : new File(imagesFolderPath).listFiles()) {
+				int numQuery = Integer.valueOf(queryImageFile.getName().replaceAll("\\.jpg", ""));
+
+				for (File file : index.getTopKMatches(ImageIO.read(queryImageFile), numberOfResults)) {
+					int numFile = Integer.valueOf(file.getName().replaceAll("\\.jpg", ""));
+					if (numQuery / numberOfImagesInCategory == numFile / numberOfImagesInCategory) {
+						correct++;
 					}
 				}
 			}
-			System.out.println((double) corr / 1000);
+			System.out.println((double) correct / (numberOfResults * index.index.size()));
 		}
 		JPanel jp = new GUI();
 		JFrame frame = new JFrame();

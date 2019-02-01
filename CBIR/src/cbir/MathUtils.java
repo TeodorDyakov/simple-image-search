@@ -22,7 +22,7 @@ public class MathUtils {
 		return res;
 	}
 
-	static float similiraty(float[] vectorA, float[] vectorB) {
-		return 1 / L1distance(vectorA, vectorB);
+	static float similarity(float[] vectorA, float[] vectorB) {
+		return 1 / (1 + L1distance(vectorA, vectorB));
 	}
 }

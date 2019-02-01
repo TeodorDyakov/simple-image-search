@@ -92,7 +92,7 @@ public class Index implements Serializable {
 			File argmin = null;
 
 			for (IndexedImage img : index) {
-				float similarity = MathUtils.similiraty(imageQueryDescriptor, img.imageDescriptor);
+				float similarity = MathUtils.similarity(imageQueryDescriptor, img.imageDescriptor);
 				if (!results.contains(img.file) && maxSimilarity < similarity) {
 					maxSimilarity = similarity;
 					argmin = img.file;
