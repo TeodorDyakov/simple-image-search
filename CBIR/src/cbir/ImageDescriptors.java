@@ -6,7 +6,7 @@ import java.awt.image.BufferedImage;
 public class ImageDescriptors {
 
 	static int[] lbp(BufferedImage image) {
-		final int[][] img = ImageDescriptors.imagetoGreycale2dArray(image);
+		final int[][] img = ImageUtils.imagetoGreycale2dArray(image);
 		final int[] histogram = new int[256];
 
 		final int[] dx = { 0, 0, -1, -1, -1, 1, 1, 1 };
@@ -43,6 +43,7 @@ public class ImageDescriptors {
 
 	static float[] computeImageDescriptor(BufferedImage img, int binsPerColor, boolean useLbp,
 			boolean useColor) {
+
 		if (useLbp && useColor) {
 			return MathUtils.normalize(ArrayUtils.concat(lbp(img), colorHistogram(img, binsPerColor)));
 		}
@@ -50,19 +51,6 @@ public class ImageDescriptors {
 			return MathUtils.normalize(lbp(img));
 		}
 		return MathUtils.normalize(colorHistogram(img, binsPerColor));
-	}
-
-	static int[][] imagetoGreycale2dArray(BufferedImage img) {
-		int[][] arr = new int[img.getHeight()][img.getWidth()];
-
-		for (int i = 0; i < arr.length; i++)
-			for (int j = 0; j < arr[0].length; j++) {
-				final Color c = new Color(img.getRGB(j, i));
-				// Y = 0.2989 R + 0.5870 G + 0.1140 B
-				final int grey = (int) (0.2989 * c.getRed() + 0.5870 * c.getGreen() + 0.1140 * c.getBlue());
-				arr[i][j] = grey;
-			}
-		return arr;
 	}
 
 }
