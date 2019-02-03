@@ -9,7 +9,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.imageio.ImageIO;
 
@@ -52,12 +54,8 @@ public class Index implements Serializable {
 
 	IndexedImage createIndexedImage(File file) throws IOException {
 		BufferedImage img = ImageIO.read(file);
-		IndexedImage indexedImage = new IndexedImage();
-		indexedImage.imageDescriptor = ImageDescriptors.computeImageDescriptor(img, binsPerColor, useLBP,
-				useColor);
-
-		indexedImage.file = file;
-		return indexedImage;
+		return new IndexedImage(file,
+				ImageDescriptors.computeImageDescriptor(img, binsPerColor, useLBP, useColor));
 	}
 
 	List<IndexedImage> buildIndex(String pathToImageFolder) throws IOException, ClassNotFoundException {
@@ -74,25 +72,42 @@ public class Index implements Serializable {
 
 			indexedImages.add(createIndexedImage(f));
 		}
+
 		System.out.println("index built in: " + (System.currentTimeMillis() - tic) / 1000f + "seconds");
 
 		return index = indexedImages;
 	}
 
+	/*
+	 * O(k*n) algorithm to return the k most similar images to the query image (
+	 * this is fast when k << n due to locality of reference)
+	 */
 	List<File> getTopKMatches(BufferedImage queryImg, int k) {
 		long tic = System.currentTimeMillis();
 
 		float[] imageQueryDescriptor = ImageDescriptors.computeImageDescriptor(queryImg, binsPerColor, useLBP,
 				useColor);
 
-		List<File> results = new ArrayList<>();
+		Set<File> results = new LinkedHashSet<>();
+		/*
+		 * Precompute the similarity between the query and all the images in the
+		 * index
+		 */
+		float[] similarityCache = new float[index.size()];
+
+		for (int i = 0; i < index.size(); i++) {
+			similarityCache[i] = MathUtils.similarity(imageQueryDescriptor, index.get(i).imageDescriptor);
+		}
 
 		for (int i = 0; i < k; i++) {
-			float maxSimilarity = Float.NEGATIVE_INFINITY;
+
+			float maxSimilarity = 0;
 			File argmin = null;
+			int idx = 0;
 
 			for (IndexedImage img : index) {
-				float similarity = MathUtils.similarity(imageQueryDescriptor, img.imageDescriptor);
+				float similarity = similarityCache[idx++];
+
 				if (!results.contains(img.file) && maxSimilarity < similarity) {
 					maxSimilarity = similarity;
 					argmin = img.file;
@@ -106,7 +121,7 @@ public class Index implements Serializable {
 
 		System.out.println("Search done in: " + (System.currentTimeMillis() - tic) / 1000f + "s");
 
-		return results;
+		return new ArrayList<>(results);
 	}
 
 }
