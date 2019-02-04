@@ -9,9 +9,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.imageio.ImageIO;
 
@@ -33,8 +31,15 @@ public class Index implements Serializable {
 		this.useColor = useColor;
 		this.binsPerColor = binsPerColor;
 		this.useLBP = useLBP;
+		index = new ArrayList<>();
 	}
 
+	/**
+	 * Serialize the index to a file
+	 * 
+	 * @param file
+	 * @throws IOException
+	 */
 	void saveToFile(File file) throws IOException {
 		FileOutputStream fos = new FileOutputStream(file);
 		ObjectOutputStream out = new ObjectOutputStream(fos);
@@ -43,6 +48,14 @@ public class Index implements Serializable {
 		fos.close();
 	}
 
+	/**
+	 * returns the deserialized index from the file
+	 * 
+	 * @param file
+	 * @return
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 */
 	static Index loadIndexFromFile(File file) throws IOException, ClassNotFoundException {
 		FileInputStream fis = new FileInputStream(file);
 		ObjectInputStream in = new ObjectInputStream(fis);
@@ -52,35 +65,57 @@ public class Index implements Serializable {
 		return index;
 	}
 
-	IndexedImage createIndexedImage(File file) throws IOException {
-		BufferedImage img = ImageIO.read(file);
-		return new IndexedImage(file,
-				ImageDescriptors.computeImageDescriptor(img, binsPerColor, useLBP, useColor));
+	/**
+	 * Loads the image form the given file, computes the image descriptor,
+	 * packages the file and descriptor in an object and returns it.
+	 * 
+	 * @param imageFile
+	 * @return an instance ofIndexedImage containing the imageFile and the image
+	 *         descriptor.
+	 * @throws IOException
+	 */
+	IndexedImage createIndexedImage(File imageFile) throws IOException {
+		BufferedImage img = ImageIO.read(imageFile);
+		float[] imageDescriptor = ImageDescriptors.computeImageDescriptor(img, binsPerColor, useLBP,
+				useColor);
+		IndexedImage indexedImage = new IndexedImage(imageFile, imageDescriptor);
+		return indexedImage;
 	}
 
-	List<IndexedImage> buildIndex(String pathToImageFolder) throws IOException, ClassNotFoundException {
+	/**
+	 * Adds all the image files in the given folder to the index
+	 * 
+	 * @param pathToImageFolder
+	 * @return
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 */
+	public void addToIndex(String pathToImageFolder) throws IOException, ClassNotFoundException {
 
-		int count = 0;
 		long tic = System.currentTimeMillis();
 
+		int count = 0;
 		File[] listOfFiles = new File(pathToImageFolder).listFiles();
-		List<IndexedImage> indexedImages = new ArrayList<>();
 
 		for (File f : listOfFiles) {
 
 			System.out.println(count++ + "/" + listOfFiles.length + " images indexed");
 
-			indexedImages.add(createIndexedImage(f));
+			index.add(createIndexedImage(f));
 		}
 
 		System.out.println("index built in: " + (System.currentTimeMillis() - tic) / 1000f + "seconds");
-
-		return index = indexedImages;
 	}
 
-	/*
+	/**
 	 * O(k*n) algorithm to return the k most similar images to the query image (
-	 * this is fast when k << n due to locality of reference)
+	 * this is fast when (k << n) due to locality of reference)
+	 * 
+	 * @param queryImg
+	 *            query image
+	 * @param k
+	 *            how many matches to return.
+	 * @return top k files which match the given image.
 	 */
 	List<File> getTopKMatches(BufferedImage queryImg, int k) {
 		long tic = System.currentTimeMillis();
@@ -88,10 +123,10 @@ public class Index implements Serializable {
 		float[] imageQueryDescriptor = ImageDescriptors.computeImageDescriptor(queryImg, binsPerColor, useLBP,
 				useColor);
 
-		Set<File> results = new LinkedHashSet<>();
+		List<File> results = new ArrayList<>();
 		/*
 		 * Precompute the similarity between the query and all the images in the
-		 * index
+		 * index.
 		 */
 		float[] similarityCache = new float[index.size()];
 
@@ -100,28 +135,24 @@ public class Index implements Serializable {
 		}
 
 		for (int i = 0; i < k; i++) {
+			// index of the minimum distance
+			int argmax = ArrayUtils.argmax(similarityCache);
 
-			float maxSimilarity = 0;
-			File argmin = null;
-			int idx = 0;
+			File argmaxFile = index.get(argmax).file;
+			float maxSimilarity = similarityCache[argmax];
+			System.out.println(argmaxFile.getName() + " similarity: " + String.format("%.3f", maxSimilarity));
+			results.add(argmaxFile);
 
-			for (IndexedImage img : index) {
-				float similarity = similarityCache[idx++];
-
-				if (!results.contains(img.file) && maxSimilarity < similarity) {
-					maxSimilarity = similarity;
-					argmin = img.file;
-				}
-			}
-
-			System.out.println(argmin.getName() + " similarity: " + String.format("%.3f", maxSimilarity));
-
-			results.add(argmin);
+			/*
+			 * set the similarity to argmax on negative infinity since the file
+			 * at index argmax has been added to the results.
+			 */
+			similarityCache[argmax] = Float.NEGATIVE_INFINITY;
 		}
 
 		System.out.println("Search done in: " + (System.currentTimeMillis() - tic) / 1000f + "s");
 
-		return new ArrayList<>(results);
+		return results;
 	}
 
 }
