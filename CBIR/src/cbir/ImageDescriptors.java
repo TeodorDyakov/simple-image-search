@@ -1,12 +1,12 @@
 package cbir;
 
 import java.awt.Color;
+import java.awt.Image;
 import java.awt.image.BufferedImage;
 
 public class ImageDescriptors {
 
-	static int[] lbp(BufferedImage image) {
-		final int[][] img = ImageUtils.imagetoGreycale2dArray(image);
+	static int[] lbp(int[][] img) {
 		final int[] histogram = new int[256];
 
 		final int[] dx = { 0, 0, -1, -1, -1, 1, 1, 1 };
@@ -27,6 +27,11 @@ public class ImageDescriptors {
 			}
 		}
 		return histogram;
+
+	}
+
+	static int[] lbp(BufferedImage img) {
+		return lbp(ImageUtils.imagetoGreycale2dArray(img));
 	}
 
 	static int[] colorHistogram(BufferedImage img, int binsPerColor) {
@@ -38,19 +43,31 @@ public class ImageDescriptors {
 				histogram[c.getRed() / div][c.getGreen() / div][c.getBlue() / div]++;
 			}
 		}
-		return ArrayUtils.flatten(histogram);
+		return (ArrayUtils.flatten(histogram));
+	}
+
+	static float[] downsampledGrayscale(BufferedImage img1, int sz) {
+		float[] f = new float[sz * sz];
+		BufferedImage img = ImageUtils
+				.convertToBufferedImage(img1.getScaledInstance(sz, sz, Image.SCALE_FAST));
+		for (int i = 0; i < sz; i++) {
+			for (int j = 0; j < sz; j++) {
+				f[j * sz + i] = ImageUtils.colorToGreyscale(new Color(img.getRGB(j, i)));
+			}
+		}
+		return f;
 	}
 
 	static float[] computeImageDescriptor(BufferedImage img, int binsPerColor, boolean useLbp,
 			boolean useColor) {
-
-		if (useLbp && useColor) {
-			return MathUtils.normalize(ArrayUtils.concat(lbp(img), colorHistogram(img, binsPerColor)));
-		}
+		float[] desc = new float[0];
 		if (useLbp) {
-			return MathUtils.normalize(lbp(img));
+			desc = MathUtils.normalize(lbp(img));
 		}
-		return MathUtils.normalize(colorHistogram(img, binsPerColor));
+		if (useColor) {
+			desc = ArrayUtils.concat(desc, MathUtils.normalize(colorHistogram(img, binsPerColor)));
+		}
+		return desc;
 	}
 
 }

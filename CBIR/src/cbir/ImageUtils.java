@@ -1,6 +1,8 @@
 package cbir;
 
 import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.image.BufferedImage;
 
 public class ImageUtils {
@@ -19,5 +21,14 @@ public class ImageUtils {
 	static final int colorToGreyscale(final Color c) {
 		// Y = 0.2989 R + 0.5870 G + 0.1140 B
 		return (int) (0.2989 * c.getRed() + 0.5870 * c.getGreen() + 0.1140 * c.getBlue());
+	}
+
+	public static BufferedImage convertToBufferedImage(Image image) {
+		BufferedImage newImage = new BufferedImage(image.getWidth(null), image.getHeight(null),
+				BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g = newImage.createGraphics();
+		g.drawImage(image, 0, 0, null);
+		g.dispose();
+		return newImage;
 	}
 }
