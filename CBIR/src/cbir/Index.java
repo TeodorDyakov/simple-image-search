@@ -74,8 +74,14 @@ public class Index implements Serializable {
 	 *         descriptor.
 	 * @throws IOException
 	 */
-	IndexedImage createIndexedImage(File imageFile) throws IOException {
-		BufferedImage img = ImageIO.read(imageFile);
+	IndexedImage createIndexedImage(File imageFile) {
+		BufferedImage img;
+		try {
+			img = ImageIO.read(imageFile);
+		} catch (IOException e) {
+			return null;
+		}
+
 		float[] imageDescriptor = ImageDescriptors.computeImageDescriptor(img, binsPerColor, useLBP,
 				useColor);
 		IndexedImage indexedImage = new IndexedImage(imageFile, imageDescriptor);
@@ -90,7 +96,7 @@ public class Index implements Serializable {
 	 * @throws IOException
 	 * @throws ClassNotFoundException
 	 */
-	public void addToIndex(String pathToImageFolder) throws IOException, ClassNotFoundException {
+	public void addToIndex(String pathToImageFolder) throws ClassNotFoundException {
 
 		long tic = System.currentTimeMillis();
 
@@ -100,8 +106,11 @@ public class Index implements Serializable {
 		for (File f : listOfFiles) {
 
 			System.out.println(count++ + "/" + listOfFiles.length + " images indexed");
+			IndexedImage ii = createIndexedImage(f);
 
-			index.add(createIndexedImage(f));
+			if (ii != null)
+				index.add(ii);
+			System.out.println(f.getName());
 		}
 
 		System.out.println("index built in: " + (System.currentTimeMillis() - tic) / 1000f + "seconds");

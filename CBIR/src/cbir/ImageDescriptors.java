@@ -15,17 +15,38 @@ public class ImageDescriptors {
 	 *            2d array of image.
 	 * @return LBPH (local binary pattern histogram) for the given 2d
 	 */
-	static int[] lbph(int[][] img) {
+	static int[] rot = new int[256];
+	static {
+		for (int i = 0; i < 256; i++) {
+			String s = Integer.toBinaryString(i);
+			for (; s.length() < 8;) {
+				s = "0" + s;
+			}
+			String min = new String(s);
+			for (int j = 0; j < 8; j++) {
+				s = s.charAt(7) + s.substring(0, 7);
+				if (min.compareTo(s) == 1) {
+					min = new String(s);
+				}
+			}
+			rot[i] = Integer.valueOf(min, 2);
+		}
+	}
+
+	public static int[] lbph(int[][] img) {
+
 		final int[] histogram = new int[256];
 
-		final int[] dx = { 0, 0, -1, -1, -1, 1, 1, 1 };
-		final int[] dy = { 1, -1, 0, 1, -1, 0, 1, -1 };
+		final int[] dx = { -1, -1, -1, 0, 1, 1, 1, 0 };
+		final int[] dy = { -1, 0, 1, 1, 1, 0, -1, -1 };
 
 		for (int i = 1; i < img.length - 1; i++) {
 			for (int j = 1; j < img[0].length - 1; j++) {
+
 				int pow = 1;
 				int pattern = 0;
 				final int center = img[i][j];
+
 				for (int k = 0; k < dx.length; k++) {
 					if (center > img[i + dx[k]][j + dy[k]]) {
 						pattern += pow;
@@ -39,7 +60,7 @@ public class ImageDescriptors {
 
 	}
 
-	static int[] lbp(BufferedImage img) {
+	public static int[] lbp(BufferedImage img) {
 		return lbph(ImageUtils.imagetoGreycale2dArray(img));
 	}
 
@@ -74,16 +95,21 @@ public class ImageDescriptors {
 	 *            of scaled image
 	 * @return 1-d grey adn downscaled vector of img1
 	 */
-	static int[] scaleDownGrey(BufferedImage img1, int sz) {
-		int[] f = new int[sz * sz];
+	static float[] scaleDownGrey(BufferedImage img1, int sz) {
+		int[] f = new int[sz * sz * 3];
 		BufferedImage img = ImageUtils
-				.convertToBufferedImage(img1.getScaledInstance(sz, sz, Image.SCALE_FAST));
+				.convertToBufferedImage(img1.getScaledInstance(sz, sz, Image.SCALE_SMOOTH));
 		for (int i = 0; i < sz; i++) {
 			for (int j = 0; j < sz; j++) {
-				f[j * sz + i] = ImageUtils.colorToGreyscale(new Color(img.getRGB(j, i)));
+				Color c = new Color(img.getRGB(j, i));
+				// f[j * sz + i] = ImageUtils.colorToGreyscale(new
+				// Color(img.getRGB(j, i)));
+				f[j * sz * 3 + i] = c.getRed();
+				f[j * sz * 3 + i + 1] = c.getBlue();
+				f[j * sz * 3 + i + 2] = c.getGreen();
 			}
 		}
-		return f;
+		return MathUtils.normalize(f);
 	}
 
 	/**
@@ -99,8 +125,13 @@ public class ImageDescriptors {
 	 *            - whether to use the color histogram of the image
 	 * @return the image descriptor for img
 	 */
+
+	/*
+	 * 
+	 */
 	static float[] computeImageDescriptor(BufferedImage img, int binsPerColor, boolean useLbp,
 			boolean useColor) {
+		// return scaleDownGrey(img, 16);
 		float[] desc = new float[0];
 		if (useLbp) {
 			desc = MathUtils.normalize(lbp(img));
@@ -108,7 +139,7 @@ public class ImageDescriptors {
 		if (useColor) {
 			desc = ArrayUtils.concat(desc, MathUtils.normalize(colorHistogram(img, binsPerColor)));
 		}
-		return desc;
+		return MathUtils.normalize(desc);
 	}
 
 }
